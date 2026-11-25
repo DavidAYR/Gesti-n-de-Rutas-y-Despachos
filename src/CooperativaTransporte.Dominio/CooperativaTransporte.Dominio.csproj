@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Librería de dominio: NO referencia Windows Forms (lógica separada de la interfaz). -->
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>CooperativaTransporte.Dominio</RootNamespace>
+  </PropertyGroup>
+
+</Project>
