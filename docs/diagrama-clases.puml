@@ -1,0 +1,317 @@
+@startuml diagrama-clases
+' =====================================================================
+'  Gestión de Rutas y Despachos - Cooperativa de Transporte Intermunicipal
+'  Diagrama de clases (generado a partir del código fuente de /src)
+'  Visibilidad:  + público   - privado   # protegido   ~ interno
+'  {abstract} = abstracto   {static} = estático / const
+' =====================================================================
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 70
+skinparam defaultFontName Segoe UI
+skinparam classFontSize 13
+skinparam classBackgroundColor #FFFFFF
+skinparam classBorderColor #204E78
+skinparam classHeaderBackgroundColor #DCE8F3
+skinparam packageBackgroundColor #F7F9FB
+skinparam packageBorderColor #204E78
+skinparam ArrowColor #333333
+hide empty members
+
+package "Dominio (CooperativaTransporte.Dominio · net8.0, sin Windows Forms)" as Dominio {
+
+  enum Franja {
+    Manana = 0
+    Tarde = 1
+    Noche = 2
+  }
+
+  enum TipoServicio {
+    Corriente
+    Ejecutivo
+    Preferencial
+  }
+
+  enum EstadoDespacho {
+    Aprobado
+    Rechazado
+  }
+
+  enum FiltroTipo {
+    Todos
+    Pasajeros
+    Carga
+  }
+
+  class Catalogo <<static>> {
+    + {static} Rutas : string[]
+    + {static} Franjas : string[]
+    + {static} HorariosFranja : string[]
+    + {static} TarifasBasePasajero : double[,]
+    + {static} CuposPorFranja : int[,]
+    + {static} MetaRecaudoDiaria : double = 1500000
+    + {static} CantidadRutas : int
+    + {static} CantidadFranjas : int
+  }
+
+  class Validaciones <<static>> {
+    - {static} PatronPlaca : Regex
+    + {static} EsPlacaValida(placa : string?) : bool
+    + {static} EsNombreValido(nombre : string?) : bool
+  }
+
+  class Formatos <<static>> {
+    + {static} Cultura : CultureInfo
+    + {static} Moneda(valor : double) : string
+    + {static} Fecha(fecha : DateTime) : string
+    + {static} Numero(valor : double) : string
+  }
+
+  abstract class Despacho {
+    + {static} TasaUsoTerminal : double = 5000
+    + {static} Separador : char = '|'
+    + {static} FormatoFecha : string = "yyyy-MM-dd"
+    + Id : int «get; internal set»
+    + Fecha : DateTime
+    + Placa : string
+    + Conductor : string
+    + RutaIndice : int
+    + Franja : Franja
+    + VencimientoSoat : DateTime
+    + Estado : EstadoDespacho «get; private set»
+    + MotivoRechazo : string «get; private set»
+    + {abstract} Tipo : string
+    + {abstract} Detalle : string
+    + EsAprobado : bool
+    + NombreRuta : string
+    + NombreFranja : string
+    --
+    # Despacho(fecha : DateTime, placa : string, conductor : string, rutaIndice : int, franja : Franja, vencimientoSoat : DateTime)
+    + CalcularTotal() : double «virtual»
+    + ValidarReglas() : List<string> «virtual»
+    + ALineaTexto() : string «virtual»
+    ~ Aprobar() : void
+    ~ Rechazar(motivo : string) : void
+    # {static} LimpiarTexto(texto : string) : string
+    + ToString() : string «override»
+  }
+
+  class DespachoPasajeros {
+    + Servicio : TipoServicio
+    + Pasajeros : int
+    + CapacidadPuestos : int
+    + Tipo : string «override» = "PASAJEROS"
+    + Detalle : string «override»
+    --
+    + DespachoPasajeros(fecha, placa, conductor, rutaIndice, franja, vencimientoSoat, servicio : TipoServicio, pasajeros : int, capacidadPuestos : int)
+    + FactorServicio() : double
+    + CalcularTotal() : double «override»
+    + ValidarReglas() : List<string> «override»
+    + ALineaTexto() : string «override»
+  }
+
+  class DespachoCarga {
+    + {static} RecargoFragil : double = 0.15
+    + Kilos : double
+    + CapacidadKg : double
+    + TarifaPorKilo : double
+    + Fragil : bool
+    + Tipo : string «override» = "CARGA"
+    + Detalle : string «override»
+    --
+    + DespachoCarga(fecha, placa, conductor, rutaIndice, franja, vencimientoSoat, kilos : double, capacidadKg : double, tarifaPorKilo : double, fragil : bool)
+    + RecargoFranja() : double
+    + CalcularTotal() : double «override»
+    + ValidarReglas() : List<string> «override»
+    + ALineaTexto() : string «override»
+  }
+
+  class GestorDespachos {
+    - _despachos : List<Despacho>
+    - _siguienteId : int
+    + Despachos : IReadOnlyList<Despacho>
+    + Cantidad : int
+    --
+    + GestorDespachos()
+    + Registrar(despacho : Despacho) : bool
+    + ConstruirMatrizOcupacion(fecha : DateTime) : int[,]
+    - VehiculoYaAsignado(placa : string, fecha : DateTime, franja : Franja) : bool
+    + Filtrar(fecha : DateTime?, tipo : FiltroTipo) : List<Despacho>
+    + Eliminar(id : int) : bool
+    + ReemplazarTodos(nuevos : List<Despacho>) : void
+  }
+
+  class InformeOperativo {
+    + Fecha : DateTime?
+    + Filtro : FiltroTipo
+    .. contadores ..
+    + TotalRegistros : int
+    + Aprobados : int
+    + Rechazados : int
+    + DespachosPasajeros : int
+    + DespachosCarga : int
+    + RechazosSoat : int
+    + RechazosCapacidad : int
+    + RechazosSinCupo : int
+    + RechazosVehiculoRepetido : int
+    + RechazosOtros : int
+    + DiasOperados : int
+    + FranjasLlenas : int
+    .. acumuladores ..
+    + TotalRecaudado : double
+    + TotalPasajeros : int
+    + TotalKilos : double
+    + RecaudoPorRuta : double[]
+    + MatrizDespachos : int[,]
+    .. banderas ..
+    + HayRechazados : bool
+    + SuperaMeta : bool
+    + HayFranjaLlena : bool
+    .. derivados ..
+    + Meta : double
+    + PorcentajeAprobacion : double
+    + PromedioPorDespacho : double
+    + RutaMasRentable : string
+    + CeldaMasOcupada : string
+    --
+    + InformeOperativo(despachos : List<Despacho>, fecha : DateTime?, filtro : FiltroTipo)
+    - RecorrerDespachos(despachos : List<Despacho>) : void
+    - ClasificarRechazo(motivo : string) : void
+    - RecorrerMatriz() : void
+    - RecorrerVectorRutas() : void
+    + GenerarTexto() : string
+  }
+
+  class ResultadoCarga {
+    + Despachos : List<Despacho>
+    + Errores : List<string>
+    + LineasLeidas : int
+    + LineasValidas : int
+    + LineasDescartadas : int
+  }
+
+  class ArchivoDespachos {
+    - {static} CamposComunes : int = 10
+    - {static} Encabezado : string
+    + RutaArchivo : string
+    + Existe : bool
+    --
+    + ArchivoDespachos(rutaArchivo : string)
+    + Guardar(despachos : IEnumerable<Despacho>) : void
+    + Cargar() : ResultadoCarga
+    - {static} InterpretarLinea(linea : string, out error : string) : Despacho?
+  }
+}
+
+package "Interfaz (Windows Forms) · CooperativaTransporte.App · net8.0-windows" as Interfaz {
+
+  class Form <<System.Windows.Forms>>
+
+  class Program <<static>> {
+    - {static} Main() : void  «[STAThread]»
+  }
+
+  class FormPrincipal <<partial>> {
+    == FormPrincipal.cs ==
+    - _gestor : GestorDespachos
+    - _archivo : ArchivoDespachos
+    - _errorProvider : ErrorProvider
+    - _tabs : TabControl
+    + FormPrincipal()
+    - FormPrincipal_Load(sender, e) : void
+    - FormPrincipal_FormClosing(sender, e : FormClosingEventArgs) : void
+    - RefrescarTodo() : void
+    - {static} CrearEtiqueta(texto : string, x : int, y : int) : Label
+    - {static} CrearGrilla() : DataGridView
+    == FormPrincipal.Registro.cs (Pestaña 1) ==
+    - _dtpFecha, _dtpSoat : DateTimePicker
+    - _cmbRuta, _cmbFranja, _cmbServicio : ComboBox
+    - _txtPlaca, _txtConductor : TextBox
+    - _txtPasajeros, _txtCapacidad : TextBox
+    - _txtKilos, _txtCapacidadKg, _txtTarifaKilo : TextBox
+    - _rbPasajeros, _rbCarga : RadioButton
+    - _grpPasajeros, _grpCarga : GroupBox
+    - _chkFragil : CheckBox
+    - _lblVistaPrevia : Label
+    - _lstRecientes : ListBox
+    - CrearPestanaRegistro() : TabPage
+    - AlternarTipo() : void
+    - ValidarPlacaAlSalir() : void
+    - ValidarFormulario() : bool
+    - ValidarEntero(caja : TextBox, nombre : string) : bool
+    - ValidarDecimal(caja : TextBox, nombre : string) : bool
+    - CrearDespachoDesdeFormulario() : Despacho
+    - BtnCalcular_Click(sender, e) : void
+    - BtnRegistrar_Click(sender, e) : void
+    - LimpiarFormulario() : void
+    - RefrescarListaRecientes() : void
+    == FormPrincipal.Programacion.cs (Pestaña 2) ==
+    - _dtpProgramacion : DateTimePicker
+    - _chkTodasFechas : CheckBox
+    - _dgvDespachos, _dgvOcupacion, _dgvTarifas : DataGridView
+    - _lblOcupacion : Label
+    - CrearPestanaProgramacion() : TabPage
+    - {static} CrearMatrizGrilla() : DataGridView
+    - RefrescarGrilla() : void
+    - RefrescarMatrices() : void
+    - BtnEliminar_Click(sender, e) : void
+    == FormPrincipal.Informe.cs (Pestaña 3) ==
+    - _chkInformeFecha : CheckBox
+    - _dtpInforme : DateTimePicker
+    - _cmbFiltroTipo : ComboBox
+    - _txtInforme : TextBox
+    - _lblAlertas, _lblArchivo : Label
+    - CrearPestanaInforme() : TabPage
+    - GenerarInforme() : void
+    - BtnExportar_Click(sender, e) : void
+    - GuardarDatos() : void
+    - BtnCargar_Click(sender, e) : void
+    - CargarDatos(mostrarMensaje : bool) : void
+    - ActualizarEstadoArchivo() : void
+  }
+}
+
+' ------------------------------------------------------------- Herencia
+Despacho <|-- DespachoPasajeros
+Despacho <|-- DespachoCarga
+Form <|-- FormPrincipal
+
+' ------------------------------------------------------------- Agregación / composición / asociación
+GestorDespachos "1" o-- "0..*" Despacho : administra >
+ResultadoCarga "1" o-- "0..*" Despacho : contiene >
+FormPrincipal "1" *-- "1" GestorDespachos : _gestor
+FormPrincipal "1" *-- "1" ArchivoDespachos : _archivo
+Despacho --> "1" Franja
+Despacho --> "1" EstadoDespacho
+DespachoPasajeros --> "1" TipoServicio
+InformeOperativo --> "1" FiltroTipo
+
+' ------------------------------------------------------------- Dependencias
+Program ..> FormPrincipal : <<create>>
+FormPrincipal ..> InformeOperativo : <<create>>
+FormPrincipal ..> DespachoPasajeros : <<create>>
+FormPrincipal ..> DespachoCarga : <<create>>
+FormPrincipal ..> Validaciones : usa
+ArchivoDespachos ..> ResultadoCarga : <<create>>
+ArchivoDespachos ..> DespachoPasajeros : <<create>>
+ArchivoDespachos ..> DespachoCarga : <<create>>
+InformeOperativo ..> Despacho : recorre
+GestorDespachos ..> FiltroTipo : usa
+GestorDespachos ..> Catalogo : cupos
+Despacho ..> Catalogo : rutas/franjas
+DespachoPasajeros ..> Catalogo : tarifas
+InformeOperativo ..> Catalogo : meta/cupos
+Despacho ..> Validaciones : usa
+Despacho ..> Formatos : usa
+
+note bottom of Despacho
+  CalcularTotal() polimórfico:
+  base = 5.000 (tasa de terminal)
+  Pasajeros: base + pasajeros × tarifa[ruta, franja] × factor
+  Carga: base + kilos × tarifaKilo × (1 + recargoFranja) × (1,15 si frágil)
+end note
+
+@enduml
