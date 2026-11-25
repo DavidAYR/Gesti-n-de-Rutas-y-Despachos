@@ -1,0 +1,12 @@
+# TIPO|ID|FECHA|PLACA|CONDUCTOR|RUTA|FRANJA|VENCE_SOAT|ESTADO|MOTIVO|...campos propios del tipo
+PASAJEROS|1|2026-12-01|SXA123|Carlos Restrepo|0|0|2027-03-15|Aprobado||Corriente|38|40
+PASAJEROS|2|2026-12-01|TPL456|Luz Marina Gómez|0|0|2027-01-20|Aprobado||Ejecutivo|30|32
+PASAJEROS|3|2026-12-01|WMK789|Jorge Ochoa|2|0|2026-11-10|Rechazado|SOAT vencido el 10/11/2026|Corriente|25|40
+CARGA|4|2026-12-01|GHT321|Andrés Zapata|1|1|2027-05-30|Aprobado||850|1500|420|False
+PASAJEROS|5|2026-12-01|KLM654|Paula Henao|3|1|2027-02-28|Rechazado|Sobrecupo: 45 pasajeros para 40 puestos|Corriente|45|40
+PASAJEROS|6|2026-12-01|SXA123|Carlos Restrepo|4|2|2027-03-15|Aprobado||Preferencial|18|20
+CARGA|7|2026-12-01|BRT852|Mauricio Vélez|2|2|2027-08-12|Aprobado||1200|2000|510|True
+PASAJEROS|8|2026-12-02|TPL456|Luz Marina Gómez|1|0|2027-01-20|Aprobado||Ejecutivo|28|32
+PASAJEROS|9|2026-12-02|QWE147|Sandra Ríos|1|0|2027-06-01|Aprobado||Corriente|35|40
+PASAJEROS|10|2026-12-02|ZXC258|Esteban Arango|1|0|2027-04-14|Rechazado|Sin cupo en Medellín - La Ceja franja Mañana (2/2 despachos)|Corriente|30|40
+CARGA|11|2026-12-02|GHT321|Andrés Zapata|3|1|2027-05-30|Rechazado|Sobrecarga: 2300 kg para capacidad de 1500 kg|2300|1500|400|False

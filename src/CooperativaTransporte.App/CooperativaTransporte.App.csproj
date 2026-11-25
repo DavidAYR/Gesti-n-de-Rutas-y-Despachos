@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>CooperativaTransporte.App</RootNamespace>
+    <!-- Permite ejecutar con un runtime más nuevo (.NET 9 / 10) si no está instalado .NET 8. -->
+    <RollForward>Major</RollForward>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CooperativaTransporte.Dominio\CooperativaTransporte.Dominio.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="datos\ejemplo_despachos.txt" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>
